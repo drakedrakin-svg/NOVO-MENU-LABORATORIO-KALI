@@ -1,11 +1,8 @@
 #pragma once
 #include <Includes/Includes.hpp>
 
-#include <d3dx11.h>
 #include <d3d11.h>
-#include <D3DX11tex.h>
 #pragma comment( lib, "d3d11.lib" )
-#pragma comment( lib, "D3DX11.lib" )
 
 class cColors {
 public:

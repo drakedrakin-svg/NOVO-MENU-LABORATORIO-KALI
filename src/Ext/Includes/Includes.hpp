@@ -29,12 +29,14 @@
 #include <mutex>
 #include <chrono>
 
-#include <d3dx11.h>
 #include <d3d11.h>
-#include <D3DX11tex.h>
 
 
-#include <D3dx9math.h>
+// Substitui <D3dx9math.h>. Fica aqui porque 38 arquivos incluem Includes.hpp e
+// esperam D3DXVECTOR3/D3DXMATRIX disponiveis, como era antes.
+#include <Includes/D3DXMath.hpp>
+// Carrega PNG da memoria por WIC, no lugar do D3DX11CreateShaderResourceViewFromMemory.
+#include <Includes/Texture.hpp>
 
 #pragma comment( lib, "ws2_32.lib" )
 #pragma comment( lib, "Normaliz.lib" )
@@ -43,7 +45,6 @@
 #pragma comment( lib, "libcurl.lib" )
 
 #pragma comment( lib, "d3d11.lib" )
-#pragma comment( lib, "D3DX11.lib" )
 
 #pragma warning( disable : 4996 )
 

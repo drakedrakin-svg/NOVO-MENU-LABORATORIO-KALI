@@ -46,8 +46,6 @@ namespace Gui {
 			ZBID_ABOVELOCK_UX = 18,
 		};
 
-		D3DX11_IMAGE_LOAD_INFO Info;
-		ID3DX11ThreadPump* Pump{ nullptr };
 
 	public:
 		void Render();

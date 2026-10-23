@@ -5,12 +5,9 @@
 #include <Core/SDK/Structs/GameClasses.hpp>
 
 
-#include <d3dx11.h>
 #include <d3d11.h>
-#include <D3DX11tex.h>
-#include <D3dx9math.h>
+#include <Includes/D3DXMath.hpp>
 #pragma comment( lib, "d3d11.lib" )
-#pragma comment( lib, "D3DX11.lib" )
 
 namespace Core {
 
