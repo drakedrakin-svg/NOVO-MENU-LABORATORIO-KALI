@@ -95,6 +95,16 @@ namespace Gui
 				TranslateMessage(&Message);
 				DispatchMessage(&Message);
 			}
+			else {
+				// PeekMessage nao bloqueia. Sem esta espera o loop desenha o mais rapido
+				// que a CPU permitir, mesmo com o menu fechado - foi o que deixava a
+				// maquina lenta e, depois de um tempo, o processo sem responder.
+				// Quando o VSync esta ligado o Present ja limita; com ele desligado, nao.
+				if (g_Config.General->VSync)
+					WaitMessage();
+				else
+					Sleep(1);
+			}
 
 			HWND ActiveWindow = GetForegroundWindow();
 
