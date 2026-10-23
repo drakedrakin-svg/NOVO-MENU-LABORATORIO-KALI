@@ -96,23 +96,37 @@ Device: `#define drvname L"GN6Qn-554SFf"` (`Driver.hpp:21`).
 
 ## 4. OS SETE DEFEITOS DO DRIVER — VERIFICADOS POR LEITURA
 
-### 4.1 O driver certo está no código e é ignorado
+### 4.1 `driver_data[42136]` NÃO é um driver de kernel — é uma DLL x64
 
 `src/Ext/Driver/Driver.hpp:195`
+
+> **CORREÇÃO.** Uma versão anterior deste documento dizia que o driver de kernel
+> certo estava embutido aqui e era ignorado. **Estava errado.** A análise do PE
+> prova o contrário:
 
 ```cpp
 inline unsigned char driver_data[42136] = {
     0x4D, 0x5A, 0x90, 0x00, ...     // "MZ" — é um PE
 ```
 
-- Declarado `[42136]`, preenchido com **42136 elementos** (conferido por contagem)
-- Strings do array: `\Device\GN6Qn-554SFf`, `\DosDevices\GN6Qn-554SFf`
-- **Bate com `Driver.hpp:21`**
-- Referencia `crl.comodoca.com/AAA Certificate Services` → **assinado**
+| Verificação | Valor neste arquivo | Driver de kernel teria |
+|---|---|---|
+| **Subsystem** | `523` | `1` (IMAGE_SUBSYSTEM_NATIVE) |
+| **Characteristics** | `0x0022` = `DLL \| LARGE_ADDRESS_AWARE` | sem a flag `DLL` |
+| **Seções** | `.text .rdata .data .pdata INIT` | + `.reloc` |
+| **Símbolos de kernel** | `DriverEntry`, `IoCreateDevice`, `MmCopyVirtualMemory` → **NENHUM** | presentes |
+| **Imports** | **nenhuma DLL encontrada** | `ntoskrnl.exe` |
 
-**Nunca é usado. Nenhuma referência fora da própria declaração.**
+**É uma DLL x64** (`.text` = 0x36F2 bytes ≈ 14 KB de código), **não um `.sys`.**
 
-### 4.2 `LoadDriver()` baixa outro driver
+**O que ela É:** contém as strings `\Device\GN6Qn-554SFf` e
+`\DosDevices\GN6Qn-554SFf` como **dados** — bate com `Driver.hpp:21`. É o lado
+usuário que fala com o device, não o driver.
+
+**Continuar afirmando que "é um driver assinado pronto para usar" é falso.**
+Verificar antes de qualquer conclusão sobre carregamento.
+
+### 4.2 `LoadDriver()` baixa um arquivo de terceiros
 
 `src/Src/Core/SDK/Memory.cpp:349-361`
 
@@ -125,6 +139,9 @@ system("sc start 4ware");
 
 Três problemas: serviço `4ware` ≠ device `GN6Qn-554SFf`; o comentário admite que
 o link é falso; **sem hash e sem verificação de assinatura**.
+
+**Não baixe esse arquivo para inspecionar sem ambiente isolado.** O conteúdo da
+URL **não foi verificado** e eu não sei o que é.
 
 ### 4.3 `init()` abre, nunca carrega
 

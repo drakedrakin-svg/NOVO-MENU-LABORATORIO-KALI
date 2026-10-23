@@ -88,7 +88,15 @@ namespace driver {
 		return true;
 	}
 
-	inline void read_physical( PVOID address , PVOID buffer , DWORD size ) {
+	// Com driver_handle == nullptr (init falhou) o DeviceIoControl falha, o buffer fica
+	// com lixo e ninguem percebe: read<T> devolvia esse lixo como se fosse o valor real
+	// da memoria. Era por isso que o menu "funcionava" sem driver - lia zero e lixo.
+	inline bool is_open( ) {
+		return driver_handle != nullptr && driver_handle != INVALID_HANDLE_VALUE;
+	}
+
+	inline bool read_physical( PVOID address , PVOID buffer , DWORD size ) {
+		if ( !is_open( ) || buffer == nullptr || size == 0 ) return false;
 		rw arguments = {};
 		arguments.address = reinterpret_cast< ULONGLONG >( address );
 		arguments.buffer = reinterpret_cast< ULONGLONG >( buffer );
@@ -96,10 +104,11 @@ namespace driver {
 		arguments.process_id = process_id;
 		arguments.write = FALSE;
 		DWORD returned = 0;
-		DeviceIoControl( driver_handle , req_rw , &arguments , sizeof( arguments ) , nullptr , 0 , &returned , nullptr );
+		return DeviceIoControl( driver_handle , req_rw , &arguments , sizeof( arguments ) , nullptr , 0 , &returned , nullptr ) != FALSE;
 	}
 
-	inline void write_physical( PVOID address , PVOID buffer , DWORD size ) {
+	inline bool write_physical( PVOID address , PVOID buffer , DWORD size ) {
+		if ( !is_open( ) || buffer == nullptr || size == 0 ) return false;
 		rw arguments = {};
 		arguments.address = reinterpret_cast< ULONGLONG >( address );
 		arguments.buffer = reinterpret_cast< ULONGLONG >( buffer );
@@ -107,16 +116,17 @@ namespace driver {
 		arguments.process_id = process_id;
 		arguments.write = TRUE;
 		DWORD returned = 0;
-		DeviceIoControl( driver_handle , req_rw , &arguments , sizeof( arguments ) , nullptr , 0 , &returned , nullptr );
+		return DeviceIoControl( driver_handle , req_rw , &arguments , sizeof( arguments ) , nullptr , 0 , &returned , nullptr ) != FALSE;
 	}
 
 	inline uintptr_t get_base_address( ) {
+		if ( !is_open( ) ) return 0;
 		uintptr_t image_address = 0;
 		ba arguments = {};
 		arguments.process_id = process_id;
 		arguments.address = &image_address;
 		DWORD returned = 0;
-		DeviceIoControl( driver_handle , req_base , &arguments , sizeof( arguments ) , nullptr , 0 , &returned , nullptr );
+		if ( !DeviceIoControl( driver_handle , req_base , &arguments , sizeof( arguments ) , nullptr , 0 , &returned , nullptr ) ) return 0;
 		return image_address;
 	}
 
@@ -179,10 +189,21 @@ inline T read( uint64_t address ) {
 	return buffer;
 }
 
+// read continua devolvendo T porque centenas de chamadas dependem disso, mas read_ok
+// diz se a leitura realmente aconteceu. Sem isso, handle invalido devolvia zeros como
+// se fossem o valor da memoria, e o menu nao tinha como distinguir.
 template <typename T>
+inline bool read_ok( uint64_t address , T& out ) {
+	out = T {};
+	return driver::read_physical( reinterpret_cast< PVOID >( address ) , &out , sizeof( T ) );
+}
+
+template <typename T>
+// Devolvia true sempre, mesmo quando write_physical falhava - o mesmo defeito do
+// "return 1" em OpenProcByPid, na camada mais baixa. Toda checagem de escrita no
+// menu era inutil por causa disso.
 inline bool write( uint64_t address , const T& buffer ) {
-	driver::write_physical( reinterpret_cast< PVOID >( address ) , const_cast< T* >( &buffer ) , sizeof( T ) );
-	return true;
+	return driver::write_physical( reinterpret_cast< PVOID >( address ) , const_cast< T* >( &buffer ) , sizeof( T ) );
 }
 
 inline bool is_valid( const uint64_t adress ) {

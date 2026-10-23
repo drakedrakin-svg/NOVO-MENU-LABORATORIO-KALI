@@ -64,8 +64,10 @@ src/Src/Gui/                  Gui.cpp, Pages/, Overlay/
 **Os sete defeitos do driver** (`HANDOFF-LINUX.md` §4) são o melhor ponto de
 partida — todos verificáveis por leitura, nenhum precisa de build:
 
-1. `driver_data[42136]` — o driver certo, íntegro, **e nunca usado**
-2. `LoadDriver` baixa do catbox um driver com **nome de serviço trocado**
+1. `driver_data[42136]` — **é uma DLL x64, NÃO um driver de kernel** (Subsystem
+   `523`, flag `DLL` setada, zero símbolos de kernel). Nunca é usado.
+2. `LoadDriver` baixa do catbox um arquivo de terceiros, com **nome de serviço
+   trocado** (`4ware` vs device `GN6Qn-554SFf`)
 3. `init()` só abre, nunca carrega
 4. `return 1` (= `TRUE` = sucesso) depois de falhar
 5. `ModBaseSize` recebendo o endereço base
