@@ -1,0 +1,15 @@
+﻿# Build
+bin/
+obj/
+*.obj
+*.pdb
+*.ilk
+*.idb
+*.tlog
+*.lastbuildstate
+.vs/
+
+# Saida
+x64/
+Release/
+Debug/
