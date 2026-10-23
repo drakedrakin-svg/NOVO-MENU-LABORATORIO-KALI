@@ -9,7 +9,7 @@
 #include <regex>
 #include <iostream>
 
-#define CURL_STATIC_LIB
+#define CURL_STATICLIB
 #pragma comment( lib, "ws2_32.lib" )
 #pragma comment( lib, "Normaliz.lib" )
 #pragma comment( lib, "Crypt32.lib" )

@@ -1,6 +1,6 @@
 #pragma once
 
-#define CURL_STATIC_LIB
+#define CURL_STATICLIB
 #define IMGUI_DEFINE_MATH_OPERATORS
 
 #define M_PI 3.14159265358979323846

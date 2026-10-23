@@ -49,6 +49,10 @@ int APIENTRY WinMain( HINSTANCE hInst , HINSTANCE hInstPrev , PSTR cmdline , int
 				break;
 			}
 
+			// Sem isso o loop roda a 100% de um nucleo enquanto o FiveM nao abre,
+			// e nao ha como o usuario saber que o loader esta so esperando.
+			Sleep( 250 );
+
 		}
 		GetWindowThreadProcessId( g_Variables.g_hGameWindow , &g_Variables.ProcIdFiveM );
 		Core::SetupOffsets( );

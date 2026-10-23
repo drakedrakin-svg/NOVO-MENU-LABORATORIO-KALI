@@ -44,7 +44,7 @@
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -72,8 +72,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(ProjectDir)Includes;$(DXSDK_DIR)Include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(DXSDK_DIR)Lib\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir);$(ProjectDir)Includes\ImGui\Files\FreeType\include;$(ProjectDir)Includes;$(DXSDK_DIR)Include;.\Ext;.\Src;.\Ext\Includes\ImGui\Files\FreeType\include\freetype\config\;.\Ext\Includes\ImGui\Files\FreeType\include\freetype\;.\Ext\Includes\ImGui\Files\FreeType\include\freetype;.\Ext\Includes;.\Ext\Includes\ImGui;.\Ext\Includes\ImGui\Files;.\Ext\Includes\ImGui\Files\freetype;.\Ext\Includes\ImGui\Files\freetype\include;.\Ext\Includes\ImGui\Files\freetype\win64;.\Ext\Includes\ImGui\Files\freetype\include\freetype\config;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)Includes\ImGui\Files\FreeType\win64;$(DXSDK_DIR)Lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(ProjectDir);$(ProjectDir)Includes\ImGui\Files\FreeType\include;$(ProjectDir)Includes;$(DXSDK_DIR)Include;.\Ext;.\Src;.\Ext\Includes\ImGui\Files\FreeType\include\freetype\config\;.\Ext\Includes\ImGui\Files\FreeType\include\freetype\;.\Ext\Includes\ImGui\Files\FreeType\include\freetype;.\Ext\Includes;.\Ext\Includes\ImGui;.\Ext\Includes\ImGui\Files;.\Ext\Includes\ImGui\Files\freetype;.\Ext\Includes\ImGui\Files\freetype\include;.\Ext\Includes\ImGui\Files\freetype\win64;.\Ext\Includes\ImGui\Files\freetype\include\freetype\config;$(IncludePath)</IncludePath>
